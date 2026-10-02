@@ -1,0 +1,2018 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlasticPro Manufacturing Dashboard</title>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    :root { --blue:#2864ee; --ink:#102243; --muted:#63738d; --line:#dce4ef; --bg:#f7f9fc; --pale:#eaf0ff; --red:#dc2626; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); font:13px Arial,sans-serif; color:var(--ink); }
+    .app { min-height:100vh; padding-left:208px; }
+    .side { position:fixed; z-index:3; left:0; top:0; width:208px; height:100vh; background:#fff; border-right:1px solid var(--line); padding:24px 14px; }
+    .brand { display:flex; align-items:center; gap:10px; margin:0 10px 28px; font-weight:bold; }
+    .logo { display:grid; place-items:center; width:30px; height:30px; border-radius:99px; background:var(--blue); color:#fff; font-size:17px; }
+    .brand small { display:block; color:var(--muted); font-weight:normal; font-size:10px; margin-top:2px; }
+    .menu { display:grid; gap:4px; }
+    .menu div { display:flex; align-items:center; gap:12px; padding:10px; border-radius:99px; color:#506481; font-weight:600; cursor:pointer; user-select:none; }
+    .menu div:hover { background:#f1f5f9; }
+    .menu .active { color:#fff; background:var(--blue); }
+    .menu .active:hover { background:var(--blue); }
+    .menu i { font-style:normal; font-size:17px; width:18px; text-align:center; }
+    
+    .mobile-nav { display:none; background:#fff; border-bottom:1px solid var(--line); overflow-x:auto; white-space:nowrap; padding:6px 12px; gap:8px; }
+    .mobile-nav button { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border-radius:16px; background:#f1f5f9; color:#506481; border:0; font-size:12px; font-weight:600; cursor:pointer; }
+    .mobile-nav button.active { background:var(--blue); color:#fff; }
+
+    .top { height:49px; display:flex; align-items:center; justify-content:space-between; padding:0 26px 0 19px; background:#fff; border-bottom:1px solid var(--line); }
+    .date-title { font-size:12px; font-weight:bold; }
+    .shift { font-size:10px; color:var(--muted); margin-top:2px; }
+    .account { display:flex; align-items:center; gap:18px; color:#30425d; }
+    .avatar { background:#eaf0ff; color:var(--blue); padding:7px 10px; border-radius:50%; font-weight:bold; }
+    .icons { font-size:17px; }
+    .date-field { position:relative; display:block; }
+    .date-field #date { width:156px; padding-right:38px; }
+    .calendar-icon { position:absolute; right:10px; top:9px; color:#355074; font-size:15px; pointer-events:none; }
+    .date-field #calendar { position:absolute; right:0; top:0; width:38px; height:34px; opacity:0; cursor:pointer; }
+    main { max-width:1320px; margin:auto; padding:21px 18px 32px; }
+    .heading { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; }
+    .heading h1 { font-size:17px; margin:0 0 4px; }
+    .heading p { margin:0; color:#53709a; }
+    .filter { display:flex; align-items:end; gap:8px; }
+    label { display:grid; gap:5px; color:var(--muted); font-size:11px; font-weight:bold; }
+    input,select,button { height:34px; border-radius:7px; font:inherit; }
+    input,select { border:1px solid #cbd5e1; padding:0 9px; color:var(--ink); background:#fff; }
+    button { background:var(--blue); color:white; border:0; padding:0 13px; font-weight:bold; cursor:pointer; }
+    .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; }
+    .card,.panel { background:white; border:1px solid var(--line); border-radius:13px; box-shadow:0 1px 2px #1022430c; }
+    .card { min-height:119px; padding:16px; }
+    .card-icon { display:grid; place-items:center; width:33px; height:33px; background:var(--pale); color:var(--blue); border-radius:9px; font-size:17px; }
+    .card strong { display:block; font-size:21px; line-height:1; margin-top:14px; }
+    .card strong small { font-size:11px; color:#415673; }
+    .card span { display:block; margin-top:6px; color:#557098; font-size:11px; }
+    .content { display:grid; grid-template-columns:1.12fr 1fr; gap:14px; margin-top:19px; }
+    .panel { padding:16px; min-height:100px; margin-bottom:14px; }
+    .panel h2 { margin:0 0 10px; font-size:12px; }
+    .chart { width:100%; height:260px; }
+    .activity { max-height:262px; overflow:auto; padding-right:3px; }
+    
+    .machine { border:1px solid #fecaca; background:#fff6f6; border-radius:9px; padding:10px; margin:8px 0; display:grid; grid-template-columns:42px 52px 1fr auto; align-items:center; gap:10px; }
+    .machine b { font-size:12px; }
+    .machine small { font-size:10px; color:#61728e; }
+    .machine .stats { font-size:10px; color:#526b92; text-align:right; }
+    .machine .stats b { display:block; color:#1f3656; font-size:11px; }
+    
+    .thumb-img { width:38px; height:38px; object-fit:cover; border-radius:6px; border:1px solid var(--line); cursor:pointer; background:#f1f5f9; transition:transform 0.15s; }
+    .thumb-img:hover { transform:scale(1.1); border-color:var(--blue); }
+    .no-thumb { width:38px; height:38px; display:grid; place-items:center; background:#f1f5f9; border-radius:6px; color:#94a3b8; font-size:10px; border:1px dashed #cbd5e1; }
+
+    .mc-link, .item-link { color:var(--blue); font-weight:bold; text-decoration:underline; cursor:pointer; }
+    .mc-link:hover, .item-link:hover { color:#1d4ed8; }
+
+    .lower { margin-top:14px; }
+    .lower .panel { min-height:0; }
+    .weekly { margin-top:14px; }
+    .table-wrap { max-height:450px; overflow:auto; }
+    .wide-table { overflow-x:auto; }
+    table { border-collapse:collapse; width:100%; font-size:12px; white-space:nowrap; }
+    th,td { border-bottom:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:middle; }
+    th { position:sticky; top:0; background:#f8fafc; color:var(--muted); font-size:10px; z-index:1; border-top:1px solid var(--line); }
+    .num { text-align:right; }
+    .badge { padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px; display:inline-block; }
+    .badge-ok { background:#dcfce7; color:#15803d; }
+    .badge-ng { background:#fee2e2; color:#b91c1c; }
+    .badge-cndb { background:#fef3c7; color:#b45309; }
+    .empty { color:var(--muted); text-align:center; padding:40px 12px; }
+    .hidden { display:none!important; }
+
+    /* TIMELINE STATUS COLORS */
+    .tl-status-Run { background:#4ade80!important; color:#14532d; font-weight:bold; text-align:center; }
+    .tl-status-Error { background:#f87171!important; color:#7f1d1d; font-weight:bold; text-align:center; }
+    .tl-status-Set { background:#facc15!important; color:#713f12; font-weight:bold; text-align:center; }
+    .tl-status-OH { background:#38bdf8!important; color:#0c4a6e; font-weight:bold; text-align:center; }
+    .tl-status-NoPlan { background:#f1f5f9!important; color:#94a3b8; text-align:center; }
+    .tl-status-Wait { background:#fef08a!important; color:#854d0e; text-align:center; }
+
+    /* MODALS & CENTERED IMAGES */
+    .img-modal { position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; }
+    .img-modal img { max-width:90%; max-height:80vh; border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+    .img-modal .close-btn { color:#fff; font-size:14px; font-weight:bold; cursor:pointer; background:var(--blue); padding:8px 20px; border-radius:20px; border:0; }
+
+    .mc-modal-box { background:#fff; border-radius:12px; width:92%; max-width:900px; max-height:90vh; overflow-y:auto; padding:20px; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+    .mc-modal-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:16px; }
+    .mc-modal-header h2 { margin:0; font-size:16px; color:var(--blue); }
+    .mc-grid { display:grid; grid-template-columns:220px 1fr; gap:20px; margin-bottom:20px; }
+    
+    .mc-img-box { 
+      width:100%; 
+      height:220px; 
+      border:1px dashed #cbd5e1; 
+      border-radius:8px; 
+      display:flex !important; 
+      justify-content:center !important; 
+      align-items:center !important; 
+      background:#f8fafc; 
+      overflow:hidden; 
+      position:relative; 
+    }
+    .mc-img-box img { 
+      max-width:100%; 
+      max-height:100%; 
+      object-fit:contain; 
+      cursor:pointer; 
+      border-radius:6px;
+    }
+
+    .mc-specs { display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px; }
+    .mc-specs div { background:#f8fafc; padding:8px 12px; border-radius:6px; border:1px solid var(--line); }
+    .mc-specs label { font-size:10px; color:var(--muted); display:block; font-weight:bold; margin-bottom:2px; }
+    .mc-specs span { font-weight:bold; color:var(--ink); }
+
+    .search-wrap { position:relative; display:flex; gap:8px; width:100%; max-width:350px; }
+    .search-wrap input { width:100%; font-size:12px; }
+    .search-dropdown { position:absolute; top:38px; left:0; right:0; background:#fff; border:1px solid var(--line); border-radius:7px; max-height:220px; overflow-y:auto; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.1); display:none; }
+    .search-dropdown div { padding:8px 12px; cursor:pointer; font-size:12px; border-bottom:1px solid #f1f5f9; }
+    .search-dropdown div:hover { background:#f8fafc; color:var(--blue); font-weight:bold; }
+    .item-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin-bottom:14px; }
+
+    @media(max-width:900px){ 
+      .app{padding-left:0} 
+      .side{display:none} 
+      .mobile-nav{display:flex} 
+      .cards{grid-template-columns:repeat(2,1fr)} 
+      .content{grid-template-columns:1fr} 
+      .item-kpis{grid-template-columns:1fr;} 
+      .mc-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INPUT FILE ẨN CHỌN UPLOAD ẢNH -->
+  <input type="file" id="imageFileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+
+  <!-- MODAL XEM ẢNH FULL MÀN HÌNH -->
+  <div id="imageViewerModal" class="img-modal hidden">
+    <img id="modalFullImage" src="" alt="Full Image">
+    <button class="close-btn" onclick="closeImageModal()">✕ Đóng ảnh</button>
+  </div>
+
+  <!-- MODAL CHI TIẾT MÁY ÉP & THIẾT BỊ PHỤ TRỢ (LÝ LỊCH BẢO TRÌ) -->
+  <div id="machineDetailModal" class="img-modal hidden">
+    <div class="mc-modal-box">
+      <div class="mc-modal-header">
+        <h2 id="mcModalTitle">Thông số chi tiết Machine</h2>
+        <button class="close-btn" onclick="closeMachineModal()">✕ Đóng</button>
+      </div>
+
+      <div class="mc-grid">
+        <div class="mc-img-box" id="mcImageContainer">
+          <p class="empty">Đang tải ảnh…</p>
+        </div>
+        <div class="mc-specs" id="mcSpecsContainer">
+          <p class="empty">Đang tải thông số kỹ thuật…</p>
+        </div>
+      </div>
+
+      <h2 style="font-size:14px; margin:0 0 10px; color:var(--blue);">Lý lịch sửa chữa & bảo trì (Sheet_Repair_Log)</h2>
+      <div class="table-wrap wide-table" id="mcRepairLogContainer">
+        <p class="empty">Đang tải lý lịch sửa chữa…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHI TIẾT MÃ HÀNG (ITEM) & LỊCH SỬ DEFECT -->
+  <div id="itemDetailModal" class="img-modal hidden">
+    <div class="mc-modal-box">
+      <div class="mc-modal-header">
+        <h2 id="itemModalTitle">Chi tiết mã hàng</h2>
+        <button class="close-btn" onclick="closeItemModal()">✕ Đóng</button>
+      </div>
+
+      <div class="item-kpis" style="margin-bottom:16px;">
+        <article class="card" style="min-height:80px; padding:12px;">
+          <span style="margin:0; font-weight:bold; color:var(--muted);">📅 Năm bắt đầu SX</span>
+          <strong id="modalKpiFirstDate" style="margin-top:6px; font-size:16px;">-</strong>
+        </article>
+        <article class="card" style="min-height:80px; padding:12px;">
+          <span style="margin:0; font-weight:bold; color:var(--muted);">🎯 Tổng số Shot</span>
+          <strong id="modalKpiTotalShots" style="margin-top:6px; font-size:16px;">0</strong>
+        </article>
+        <article class="card" style="min-height:80px; padding:12px;">
+          <span style="margin:0; font-weight:bold; color:var(--muted);">📦 Tổng Input (Toàn lịch sử)</span>
+          <strong id="modalKpiTotalInput" style="margin-top:6px; font-size:16px;">0<small> pcs</small></strong>
+        </article>
+      </div>
+
+      <h2 style="font-size:14px; margin:0 0 10px; color:var(--blue);">Hình ảnh trực quan (Khuôn & Sản phẩm)</h2>
+      <div class="mc-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:20px;">
+        <div>
+          <label style="font-size:11px; font-weight:bold; color:var(--muted); display:block; margin-bottom:6px;">🛠️ HÌNH ẢNH KHUÔN (MOLD)</label>
+          <div class="mc-img-box" id="itemMoldImgContainer" style="height:200px;">
+            <p class="empty">Đang tải ảnh khuôn…</p>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:bold; color:var(--muted); display:block; margin-bottom:6px;">📦 HÌNH ẢNH SẢN PHẨM (PRODUCT)</label>
+          <div class="mc-img-box" id="itemProductImgContainer" style="height:200px;">
+            <p class="empty">Đang tải ảnh sản phẩm…</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="font-size:14px; margin:0 0 10px; color:var(--blue);">Thông số Kỹ thuật (Items Master)</h2>
+      <div class="mc-specs" id="itemSpecsContainer" style="margin-bottom:20px;">
+        <p class="empty">Đang tải thông số mã hàng…</p>
+      </div>
+
+      <h2 style="font-size:14px; margin:0 0 10px; color:var(--blue);">Lịch sử sự cố & Defect phát sinh</h2>
+      <div class="table-wrap wide-table" id="itemDefectModalTable">
+        <p class="empty">Đang tải lịch sử defect…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="brand">
+      <div class="logo">▥</div>
+      <div>PlasticPro<small>Manufacturing</small></div>
+    </div>
+    <nav class="menu">
+      <div class="active nav-item-dashboard" onclick="switchTab('dashboard')"><i>▦</i>Dashboard</div>
+      <div class="nav-item-production" onclick="switchTab('production')"><i>♜</i>Production</div>
+      <div class="nav-item-machines" onclick="switchTab('machines')"><i>⚙</i>Machines</div>
+      <div class="nav-item-items" onclick="switchTab('items')"><i>📦</i>Items</div>
+      <div class="nav-item-attendance" onclick="switchTab('attendance')"><i>♧</i>Attendance</div>
+      <div class="nav-item-timeline" onclick="switchTab('timeline')"><i>◷</i>Timeline</div>
+      <div class="nav-item-incidents" onclick="switchTab('incidents')"><i>⚠</i>Incidents</div>
+      <div class="nav-item-reports" onclick="switchTab('reports')"><i>▥</i>Reports</div>
+    </nav>
+  </div>
+  
+  <div class="app">
+    <header class="top">
+      <div>
+        <div class="date-title" id="headerDate">Production overview</div>
+        <div class="shift">Production dashboard · GitHub Version</div>
+      </div>
+      <div class="account"><span class="icons">⌕ ♧</span><span class="avatar">A</span><b>Admin⌄</b></div>
+    </header>
+
+    <nav class="mobile-nav">
+      <button class="active m-nav-dashboard" onclick="switchTab('dashboard')">▦ Dashboard</button>
+      <button class="m-nav-machines" onclick="switchTab('machines')">⚙ Machines</button>
+      <button class="m-nav-items" onclick="switchTab('items')">📦 Items</button>
+      <button class="m-nav-timeline" onclick="switchTab('timeline')">◷ Timeline</button>
+      <button class="m-nav-incidents" onclick="switchTab('incidents')">⚠ Incidents</button>
+      <button class="m-nav-reports" onclick="switchTab('reports')">▥ Reports</button>
+    </nav>
+    
+    <main>
+      <!-- TAB DASHBOARD VIEW -->
+      <div id="view-dashboard">
+        <section class="heading">
+          <div>
+            <h1>Dashboard</h1>
+            <p id="subtitle">Production data</p>
+          </div>
+          <div class="filter">
+            <label>Chọn ngày
+              <span class="date-field">
+                <input id="date" type="text" inputmode="numeric" maxlength="10" placeholder="DD/MM/YYYY">
+                <span class="calendar-icon">▣</span>
+                <input id="calendar" type="date">
+              </span>
+            </label>
+            <button onclick="loadDashboard()">Cập nhật</button>
+          </div>
+        </section>
+
+        <section id="dashboard" class="hidden">
+          <div class="cards">
+            <article class="card"><div class="card-icon">◔</div><strong id="runningRate">0<small>%</small></strong><span>Running Rate</span></article>
+            <article class="card"><div class="card-icon">◇</div><strong id="inputQty">0<small> pcs</small></strong><span>Total Input</span></article>
+            <article class="card"><div class="card-icon">◴</div><strong id="cycleTime">0<small> sec</small></strong><span>Avg Cycle Time</span></article>
+            <article class="card"><div class="card-icon">♢</div><strong id="defectQty">0</strong><span>Total Defects</span></article>
+            <article class="card"><div class="card-icon">♜</div><strong id="machinesRunning">0/0</strong><span>Machines Running</span></article>
+            <article class="card"><div class="card-icon">◷</div><strong id="productionTime">0<small> hrs</small></strong><span>Production Time</span></article>
+            <article class="card"><div class="card-icon">⚠️</div><strong id="stopTime">0<small> hrs</small></strong><span>Stop Time</span></article>
+            <article class="card"><div class="card-icon">⚠️</div><strong id="anomalyCount" style="color:var(--red);">0</strong><span>Máy ép chậm hơn chuẩn</span></article>
+          </div>
+
+          <section class="content">
+            <article class="panel"><h2>Production Shots by Machine</h2><div id="machineChart" class="chart"></div></article>
+            <article class="panel"><h2>Defect tickets</h2><div id="machineActivity" class="activity"></div></article>
+          </section>
+
+          <section class="content lower">
+            <article class="panel"><h2>Cycle Time Comparison by Machine (Pro vs Std)</h2><div id="cycleCompareChart" class="chart"></div></article>
+            <article class="panel"><h2>Production details & Cycle Time Analysis</h2><div class="table-wrap wide-table" id="table"></div></article>
+          </section>
+
+          <section class="panel weekly">
+            <h2>Incoming Production Plan (Lịch sản xuất 7 ngày tới)</h2>
+            <div class="table-wrap wide-table" id="incomingPlanTable"></div>
+          </section>
+
+          <section class="panel weekly">
+            <h2>Defect tickets - last 7 days</h2>
+            <div class="table-wrap wide-table" id="weeklyDefectTable"></div>
+          </section>
+        </section>
+      </div>
+
+      <!-- TAB MACHINES VIEW -->
+      <div id="view-machines" class="hidden">
+        <section class="heading">
+          <div>
+            <h1>Machines & Equipment Master</h1>
+            <p>Danh sách thông số máy ép & Thiết bị phụ trợ bảo trì</p>
+          </div>
+          <button onclick="loadMachines()">Làm mới</button>
+        </section>
+        <section class="panel">
+          <div class="table-wrap wide-table" id="machinesTableContainer">
+            <p class="empty">Đang tải danh mục máy & thiết bị…</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB ITEMS VIEW -->
+      <div id="view-items" class="hidden">
+        <section class="heading">
+          <div>
+            <h1>Items Master & Detail</h1>
+            <p>Tra cứu chi tiết mã hàng & Lịch sử sản xuất</p>
+          </div>
+          <div class="search-wrap">
+            <input id="itemSearchInput" type="text" placeholder="Gõ để tìm mã hàng (IVN Part Code)..." autocomplete="off" oninput="onItemSearchInput(this.value)">
+            <button onclick="executeItemSearch()">Tìm kiếm</button>
+            <div id="searchDropdown" class="search-dropdown"></div>
+          </div>
+        </section>
+
+        <div id="itemDetailSection" class="hidden">
+          <div class="item-kpis">
+            <article class="card">
+              <div class="card-icon">📅</div>
+              <strong id="kpiFirstDate">-</strong>
+              <span>Năm bắt đầu sản xuất</span>
+            </article>
+            <article class="card">
+              <div class="card-icon">🎯</div>
+              <strong id="kpiTotalShots">0</strong>
+              <span>Tổng số Shot đã sản xuất (Toàn lịch sử)</span>
+            </article>
+            <article class="card">
+              <div class="card-icon">📦</div>
+              <strong id="kpiTotalInput">0<small> pcs</small></strong>
+              <span>Tổng sản lượng Input (Toàn lịch sử)</span>
+            </article>
+          </div>
+
+          <div class="content" style="margin-top:0; margin-bottom:14px;">
+            <article class="panel">
+              <h2 id="monthlyChartTitle">Sản lượng sản xuất từng tháng trong năm</h2>
+              <div id="itemMonthlyChart" class="chart"></div>
+            </article>
+            <article class="panel">
+              <h2>Tổng sản lượng & Số Shot sản xuất theo từng năm</h2>
+              <div id="itemYearlyChart" class="chart"></div>
+            </article>
+          </div>
+
+          <article class="panel">
+            <h2>Lịch sử Defect từng phát sinh của mã hàng này</h2>
+            <div class="table-wrap wide-table" id="itemDefectHistoryTable">
+              <p class="empty">Đang tải lịch sử defect…</p>
+            </div>
+          </article>
+        </div>
+
+        <section class="panel">
+          <h2>Danh mục Mã Hàng (Items Master)</h2>
+          <div class="table-wrap wide-table" id="itemsTableContainer">
+            <p class="empty">Đang tải danh sách sản phẩm…</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB TIMELINE VIEW -->
+      <div id="view-timeline" class="hidden">
+        <section class="heading">
+          <div>
+            <h1>Production Timeline Schedule</h1>
+            <p>Biểu đồ Gantt theo dõi kế hoạch, sản lượng, thời gian chạy/dừng & sự cố defect phát sinh</p>
+          </div>
+          <div class="filter">
+            <label>Chọn mã hàng:
+              <select id="timelineItemCode" style="width:240px; font-weight:bold; color:var(--blue);" onchange="loadTimelineData()">
+                <option value="">Đang tải danh sách mã hàng...</option>
+              </select>
+            </label>
+            <button onclick="loadTimelineData()">🔍 Xem Timeline</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="table-wrap wide-table" id="timelineTableContainer">
+            <p class="empty">Đang tải biểu đồ Timeline…</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB REPORTS VIEW -->
+      <div id="view-reports" class="hidden">
+        <section class="heading">
+          <div>
+            <h1>Báo cáo Phân tích KPI & Hiệu suất Sản xuất</h1>
+            <p>Phân tích nguyên nhân tổn thất, Top 3 máy/mã hàng lỗi và Biểu đồ Running Rate tháng</p>
+          </div>
+          <button onclick="loadMonthlyKpiReport()">🔄 Cập nhật Báo cáo</button>
+        </section>
+
+        <div style="background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <h3 style="margin:0; color:var(--ink);">📊 Tổng quan Báo cáo Tháng</h3>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="font-weight:bold; font-size:13px;">Chọn tháng:</label>
+              <input type="month" id="kpiMonthPicker" style="padding:6px 10px; border-radius:6px; border:1px solid #ccc;" onchange="loadMonthlyKpiReport()">
+            </div>
+          </div>
+
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b style="color:#1e40af; font-size:14px;">🎯 Tỷ lệ hoàn thành Kế hoạch Tháng: <span id="repPlanRate" style="font-size:18px;">0%</span></b>
+              <small style="color:#3b82f6;" id="repPlanDetail">Thực tế: 0 / KH: 0 pcs</small>
+            </div>
+            <p style="margin:8px 0 0; font-size:12px; color:#1e3a8a;">
+              <b>Đánh giá lý do:</b> Dưới đây là phân tích chi tiết nguyên nhân dừng máy và tỷ lệ các dạng lỗi phát sinh ảnh hưởng đến tiến độ kế hoạch.
+            </p>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-bottom:20px;">
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px;">
+              <b style="color:#991b1b; font-size:13px;">🚨 Top 3 Máy dừng do lỗi nhiều nhất</b>
+              <div id="repTop3McErrorsList" style="margin-top:8px; font-size:12px;">Chưa có dữ liệu</div>
+            </div>
+
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px;">
+              <b style="color:#92400e; font-size:13px;">📉 Top 3 Mã hàng Running Rate thấp nhất</b>
+              <ol id="repTop3LowRunItems" style="margin:8px 0 0; padding-left:18px; font-size:12px; color:#78350f;">
+                <li>Chưa có dữ liệu</li>
+              </ol>
+            </div>
+
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px;">
+              <b style="color:#166534; font-size:13px;">🛠️ Top 3 Mã hàng Điều chỉnh & Defect nhiều nhất</b>
+              <div id="repTop3AdjustItemsList" style="margin-top:8px; font-size:12px;">Chưa có dữ liệu</div>
+            </div>
+          </div>
+
+          <div class="content" style="margin-top:0;">
+            <article class="panel">
+              <h2>Biểu đồ Tròn Tổng hợp tất cả các lỗi Defect phát sinh trong tháng</h2>
+              <div id="repMonthDefectPieChart" class="chart"></div>
+            </article>
+            <article class="panel">
+              <h2>Xu hướng Running Rate Tổng hợp Tháng (%)</h2>
+              <div id="repMonthlyTrendChart" class="chart"></div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB INCIDENTS VIEW -->
+      <div id="view-incidents" class="hidden">
+        <section class="heading">
+          <div>
+            <h1>Báo cáo & Quản lý Sự cố / Sửa chữa</h1>
+            <p>Gửi yêu cầu sửa chữa thiết bị & Theo dõi tiến độ xử lý của Kỹ thuật viên</p>
+          </div>
+          <button onclick="loadIncidents()">🔄 Tải lại dữ liệu</button>
+        </section>
+
+        <section class="panel" style="max-width:700px; margin:0 auto 24px;">
+          <h2 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:16px;">
+            ⚠️️ Báo cáo sự cố
+          </h2>
+
+          <form id="incidentForm" onsubmit="handleIncidentSubmit(event)" style="display:grid; gap:14px;">
+            <label>Tên người báo cáo *
+              <select id="incReporter" required>
+                <option value="">Chọn người báo cáo...</option>
+              </select>
+            </label>
+
+            <label>Chọn máy gặp sự cố *
+              <select id="incMachine" required onchange="onIncidentMachineChange(this.value)">
+                <option value="">Chọn máy cần sửa chữa...</option>
+              </select>
+            </label>
+
+            <label>Chọn thiết bị / linh kiện gặp sự cố
+              <select id="incEquip">
+                <option value="-">Toàn bộ máy / Không rõ</option>
+              </select>
+            </label>
+
+            <label>Mô tả sự cố *
+              <textarea id="incIssue" rows="3" placeholder="Mô tả chi tiết sự cố gặp phải..." required style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:7px; font:inherit;"></textarea>
+            </label>
+
+            <label>Hình ảnh sự cố (Không bắt buộc)
+              <input type="file" id="incImageFile" accept="image/*">
+            </label>
+
+            <button type="submit" style="height:40px; font-size:14px; margin-top:8px;">
+              🚀 Gửi yêu cầu sửa chữa
+            </button>
+          </form>
+        </section>
+
+        <div id="incAlertBanner" class="hidden" style="background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; padding:12px 16px; margin-bottom:20px; color:#b91c1c;">
+          <b>🔔 Cảnh báo: <span id="pendingCount">0</span> yêu cầu sửa chữa cần xử lý!</b>
+          <p style="margin:4px 0 0; font-size:12px;">Có sự cố đang chờ xử lý. Vui lòng kiểm tra danh sách ưu tiên phía dưới để xử lý ngay.</p>
+        </div>
+
+        <section class="panel" style="border-left:4px solid var(--red); margin-bottom:24px;">
+          <h2 style="font-size:14px; color:var(--red);">🚨 Yêu cầu sửa chữa - Ưu tiên xử lý (Chờ Kỹ Thuật)</h2>
+          <div id="pendingRequestsContainer">
+            <p class="empty">Đang tải danh sách chờ xử lý…</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 style="font-size:14px; color:var(--blue);">✅ Lịch sử các yêu cầu đã xử lý hoàn thành</h2>
+          <div id="completedRequestsContainer">
+            <p class="empty">Đang tải lịch sử đã xử lý…</p>
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // 🔗 DÁN DƯỜNG LINK WEB APP GOOGLE APPS SCRIPT CỦA ANH VÀO ĐÂY:
+    const API_URL = "https://script.google.com/macros/s/AKfycbx6GPx6KOQjUulgHp7d0MGLLkG--P_ZkeCeoGR8CA046VFbyvWHBOgM_MeKs506tKs1_Q/exec";
+
+    // 1. CÁC HÀM TRUNG GIAN KẾT NỐI API HTTP TỪ GITHUB
+    async function apiGet(action, params = {}) {
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.append('action', action);
+        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+        
+        const response = await fetch(url);
+        return await response.json();
+      } catch (err) {
+        console.error("Lỗi API GET [" + action + "]:", err);
+        throw err;
+      }
+    }
+
+    async function apiPost(action, payload = {}) {
+      try {
+        payload.action = action;
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      } catch (err) {
+        console.error("Lỗi API POST [" + action + "]:", err);
+        throw err;
+      }
+    }
+
+    google.charts.load('current',{packages:['corechart']});
+    let ready = false, currentData, itemsMasterList = [], currentModalMcNo = '', currentModalEquipId = '', globalEquipments = [];
+    let currentModalPartCode = '';
+    let currentItemUploadType = ''; 
+
+    google.charts.setOnLoadCallback(() => { ready = true; loadDashboard(); });
+
+    const fmt = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      const monthPicker = document.getElementById('kpiMonthPicker');
+      if (monthPicker) {
+        monthPicker.value = currentMonthStr;
+      }
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.menu div').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav button').forEach(btn => btn.classList.remove('active'));
+
+      const sideActive = document.querySelector('.nav-item-' + tabName);
+      if (sideActive) sideActive.classList.add('active');
+
+      const mActive = document.querySelector('.m-nav-' + tabName);
+      if (mActive) mActive.classList.add('active');
+
+      const views = ['dashboard', 'machines', 'items', 'incidents', 'timeline', 'reports'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.add('hidden');
+      });
+
+      var targetView = document.getElementById('view-' + tabName);
+      if (targetView) {
+        targetView.classList.remove('hidden');
+      }
+
+      if (tabName === 'dashboard') {
+        loadDashboard();
+      } else if (tabName === 'machines') {
+        loadMachines();
+      } else if (tabName === 'items') {
+        loadItems();
+      } else if (tabName === 'incidents') {
+        loadIncidents();
+      } else if (tabName === 'timeline') {
+        loadTimelineData();
+      } else if (tabName === 'reports') {
+        loadMonthlyKpiReport();
+      }
+    }
+
+    function yesterday() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+
+    function toIsoDate(text) {
+      const m = String(text || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+    }
+
+    function fromIsoDate(iso) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8,10)}/${iso.slice(5,7)}/${iso.slice(0,4)}` : '';
+    }
+
+    document.getElementById('date').value = yesterday();
+    document.getElementById('calendar').value = toIsoDate(yesterday());
+    document.getElementById('calendar').addEventListener('change', e => {
+      document.getElementById('date').value = fromIsoDate(e.target.value);
+    });
+    document.getElementById('date').addEventListener('change', e => {
+      const iso = toIsoDate(e.target.value);
+      if (iso) document.getElementById('calendar').value = iso;
+    });
+
+    async function loadDashboard() {
+      if (!ready) return;
+      const raw = document.getElementById('date').value, date = toIsoDate(raw);
+      if (!date) {
+        alert('Nhập ngày theo định dạng DD/MM/YYYY, ví dụ 06/01/2026.');
+        return;
+      }
+      document.getElementById('subtitle').textContent = 'Đang tải dữ liệu…';
+      
+      try {
+        const data = await apiGet('getDashboardData', { selectedDate: date });
+        render(data);
+      } catch (e) {
+        alert(e.message || 'Không thể tải dữ liệu.');
+      }
+    }
+
+    function render(data) {
+      currentData = data;
+      const t = data.totals || { proTime:0, stopTime:0, defects:0, input:0, avgCycle:0, lots:0 },
+            totalTime = t.proTime + t.stopTime,
+            machines = data.machines || [],
+            machineCount = machines.length,
+            running = machines.filter(m => m.input > 0).length;
+
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('subtitle').textContent = `Production data · ${data.date || ''} · ${data.recordCount || 0} records · ${t.defects} defect tickets`;
+      document.getElementById('headerDate').textContent = formatDateKey(data.date || '');
+
+      set('runningRate', totalTime ? fmt.format(t.proTime / totalTime * 100) : 0, '%');
+      set('inputQty', fmt.format(t.input), ' pcs');
+      set('cycleTime', fmt.format(t.avgCycle), ' sec');
+      set('defectQty', fmt.format(t.defects));
+      set('machinesRunning', `${running}/${machineCount}`);
+      set('productionTime', fmt.format(t.proTime), ' hrs');
+      set('stopTime', fmt.format(t.stopTime), ' hrs');
+
+      drawMachine(machines);
+      drawCycleCompareChart(data.parts || []);
+      drawActivity(data.tickets || []);
+      drawTable(data.parts || []);
+      drawIncomingPlans(data.incomingPlans || []);
+      drawWeeklyDefects(data.weeklyTickets || []);
+
+      const anomalyCount = (data.parts || []).filter(p => p.warningStatus === 'CRITICAL' || p.warningStatus === 'WARNING').length;
+      if (document.getElementById('anomalyCount')) {
+        document.getElementById('anomalyCount').textContent = anomalyCount;
+      }
+    }
+
+    function renderImageThumb(url) {
+      if (url) {
+        return `<img src="${url}" class="thumb-img" onclick="openImageModal('${url}')" title="Bấm xem ảnh to" />`;
+      }
+      return `<div class="no-thumb">No img</div>`;
+    }
+
+    function openImageModal(url) {
+      document.getElementById('modalFullImage').src = url;
+      document.getElementById('imageViewerModal').classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageViewerModal').classList.add('hidden');
+    }
+
+    async function openMachineModal(mcNo) {
+      var cleanMc = String(mcNo || '').toUpperCase();
+      var numOnly = cleanMc.replace(/[^0-9]/g, '');
+      if (numOnly) {
+        cleanMc = 'MC' + String(numOnly).padStart(2, '0');
+      }
+
+      currentModalMcNo = cleanMc;
+      currentModalEquipId = ''; 
+
+      const modal = document.getElementById('machineDetailModal');
+      document.getElementById('mcModalTitle').textContent = 'Thông số & Lý lịch bảo trì máy ' + cleanMc;
+      document.getElementById('mcImageContainer').innerHTML = '<p class="empty">Đang tải ảnh…</p>';
+      document.getElementById('mcSpecsContainer').innerHTML = '<p class="empty">Đang tải thông số…</p>';
+      document.getElementById('mcRepairLogContainer').innerHTML = '<p class="empty">Đang tải lý lịch sửa chữa…</p>';
+      modal.classList.remove('hidden');
+
+      try {
+        const res = await apiGet('getMachineDetail', { mcNo: cleanMc });
+        renderMachineDetail(res);
+      } catch (e) {
+        alert('Không thể tải chi tiết máy: ' + e.message);
+      }
+    }
+
+    function closeMachineModal() {
+      document.getElementById('machineDetailModal').classList.add('hidden');
+    }
+
+    function renderMachineDetail(res) {
+      currentModalMcNo = res.mcNo;
+      currentModalEquipId = '';
+      const imgContainer = document.getElementById('mcImageContainer');
+      
+      if (res.imageUrl) {
+        imgContainer.innerHTML = `
+          <img src="${res.imageUrl}" onclick="openImageModal('${res.imageUrl}')" title="Bấm xem ảnh to" />
+          <button style="position:absolute; bottom:6px; right:6px; font-size:10px; padding:4px 8px; background:rgba(0,0,0,0.7); color:#fff; border:0; border-radius:4px; cursor:pointer;" onclick="triggerUploadMachineImage('${res.mcNo}')">📷 Đổi ảnh</button>
+        `;
+      } else {
+        imgContainer.innerHTML = `
+          <div class="no-thumb" style="width:100%; height:100%; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;" onclick="triggerUploadMachineImage('${res.mcNo}')">
+            <span style="font-size:26px;">📷</span>
+            <b style="color:var(--blue); text-align:center; padding:0 8px;">Chọn ảnh từ Photos / Thư viện</b>
+          </div>`;
+      }
+
+      const s = res.specs || {};
+      document.getElementById('mcSpecsContainer').innerHTML = `
+        <div><label>MÁY (MC NO)</label><span>${safe(s.mcNo)}</span></div>
+        <div><label>HÃNG SẢN XUẤT</label><span>${safe(s.manufacturer)}</span></div>
+        <div><label>MODEL MÁY</label><span>${safe(s.model)}</span></div>
+        <div><label>SERIAL NUMBER</label><span>${safe(s.serial)}</span></div>
+        <div><label>NĂM SẢN XUẤT</label><span>${safe(s.year)}</span></div>
+        <div><label>LỰC KẸP (CLAMP FORCE)</label><span>${safe(s.clampForce)} Tf</span></div>
+        <div><label>ĐƯỜNG KÍNH TRỤC VÍT</label><span>${safe(s.screwDia)} mm</span></div>
+        <div><label>DUNG TÍCH PHUN</label><span>${safe(s.injCap)} cm³</span></div>
+        <div><label>ÁP SUẤT PHUN</label><span>${safe(s.injPress)} Mpa</span></div>
+        <div><label>HÀNH TRÌNH KẸP</label><span>${safe(s.clampingStroke)} mm</span></div>
+      `;
+
+      const logs = res.repairLogs || [];
+      const logContainer = document.getElementById('mcRepairLogContainer');
+
+      if (!logs.length) {
+        logContainer.innerHTML = '<p class="empty">Chưa có ghi nhận lịch sử sửa chữa/bảo trì cho máy này trong Sheet_Repair_Log.</p>';
+      } else {
+        logContainer.innerHTML = `<table>
+          <thead>
+            <tr>
+              <th>NGÀY SỬA CHỮA</th>
+              <th>NỘI DUNG SỰ CỐ / SỬA CHỮA</th>
+              <th>NGUYÊN NHÂN & CÁCH XỬ LÝ</th>
+              <th>NGƯỜI THỰC HIỆN (PIC)</th>
+              <th>TÌNH TRẠNG</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs.map(l => `<tr>
+              <td><b>${safe(l.date)}</b></td>
+              <td><span style="color:var(--red); font-weight:bold;">${safe(l.issue)}</span></td>
+              <td>${safe(l.action)}</td>
+              <td><b>${safe(l.pic)}</b></td>
+              <td><span class="badge badge-ok">${safe(l.status)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+    }
+
+    function triggerUploadMachineImage(mcNo) {
+      currentModalMcNo = mcNo;
+      currentModalEquipId = '';
+      currentItemUploadType = '';
+      document.getElementById('imageFileInput').click();
+    }
+
+    async function openEquipmentModal(idEquip) {
+      if (!idEquip || idEquip === '-' || idEquip === 'undefined') {
+        alert('Mã thiết bị không hợp lệ.');
+        return;
+      }
+
+      currentModalEquipId = idEquip;
+      currentModalMcNo = '';
+
+      const modal = document.getElementById('machineDetailModal');
+      document.getElementById('mcModalTitle').textContent = 'Thông số & Lý lịch bảo trì thiết bị ' + idEquip;
+      document.getElementById('mcImageContainer').innerHTML = '<p class="empty">Đang tải ảnh thiết bị…</p>';
+      document.getElementById('mcSpecsContainer').innerHTML = '<p class="empty">Đang tải thông số thiết bị…</p>';
+      document.getElementById('mcRepairLogContainer').innerHTML = '<p class="empty">Đang tải lý lịch sửa chữa…</p>';
+      
+      modal.classList.remove('hidden');
+
+      try {
+        const res = await apiGet('getEquipmentDetail', { idEquip: idEquip });
+        renderEquipmentDetail(res);
+      } catch (e) {
+        alert('Không thể tải chi tiết thiết bị: ' + e.message);
+      }
+    }
+
+    function renderEquipmentDetail(res) {
+      currentModalEquipId = res.idEquip;
+      currentModalMcNo = '';
+      const imgContainer = document.getElementById('mcImageContainer');
+
+      if (res.imageUrl) {
+        imgContainer.innerHTML = `
+          <img src="${res.imageUrl}" onclick="openImageModal('${res.imageUrl}')" title="Bấm xem ảnh to" />
+          <button style="position:absolute; bottom:6px; right:6px; font-size:10px; padding:4px 8px; background:rgba(0,0,0,0.7); color:#fff; border:0; border-radius:4px; cursor:pointer;" onclick="triggerUploadEquipmentImage('${res.idEquip}')">📷 Đổi ảnh</button>
+        `;
+      } else {
+        imgContainer.innerHTML = `
+          <div class="no-thumb" style="width:100%; height:100%; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;" onclick="triggerUploadEquipmentImage('${res.idEquip}')">
+            <span style="font-size:26px;">📷</span>
+            <b style="color:var(--blue); text-align:center; padding:0 8px;">Chọn ảnh từ Photos / Thư viện</b>
+          </div>`;
+      }
+
+      const s = res.specs || {};
+      document.getElementById('mcSpecsContainer').innerHTML = `
+        <div><label>MÃ THIẾT BỊ (ID EQUIP)</label><span style="color:var(--blue);">${safe(res.idEquip)}</span></div>
+        <div><label>HÃNG SẢN XUẤT</label><span>${safe(s.manufacturer)}</span></div>
+        <div><label>MODEL THIẾT BỊ</label><span>${safe(s.model)}</span></div>
+        <div><label>SERIAL NUMBER</label><span>${safe(s.serial)}</span></div>
+        <div><label>MÁY ÉP ĐI KÈM (PAIR WITH)</label><span>${safe(s.pairAsset)}</span></div>
+        <div><label>TRẠNG THÁI HẠN MỤC</label><span class="badge badge-ok">${safe(s.status)}</span></div>
+      `;
+
+      const logs = res.repairLogs || [];
+      const logContainer = document.getElementById('mcRepairLogContainer');
+
+      if (!logs.length) {
+        logContainer.innerHTML = '<p class="empty">Chưa có ghi nhận sự cố / bảo trì nào cho thiết bị này trong Sheet_Repair_Log.</p>';
+      } else {
+        logContainer.innerHTML = `<table>
+          <thead>
+            <tr>
+              <th>MÃ ID</th>
+              <th>NGÀY BÁO</th>
+              <th>MÁY ÉP</th>
+              <th>NGƯỜI BÁO</th>
+              <th>MÔ TẢ SỰ CỐ</th>
+              <th>NGUYÊN NHÂN & CÁCH XỬ LÝ</th>
+              <th>KẾT QUẢ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs.map(l => {
+              let statusBadge = '<span class="badge badge-ok">' + safe(l.status) + '</span>';
+              if (String(l.status).toLowerCase().includes('đang xử lý') || String(l.status).toLowerCase().includes('chờ')) {
+                statusBadge = '<span class="badge badge-ng">' + safe(l.status) + '</span>';
+              }
+              return `<tr>
+                <td><b>${safe(l.reqId)}</b></td>
+                <td>${safe(l.date)}</td>
+                <td><span class="mc-link" onclick="openMachineModal('${safe(l.mcNo)}')">${safe(l.mcNo)}</span></td>
+                <td><b>${safe(l.reporter)}</b></td>
+                <td style="color:var(--red); font-weight:bold; max-width:200px; white-space:normal;">${safe(l.issue)}</td>
+                <td style="max-width:250px; white-space:normal;">
+                  ${l.cause ? '<b>Nguyên nhân:</b> ' + safe(l.cause) + '<br>' : ''}
+                  ${l.action ? '<b>Xử lý:</b> ' + safe(l.action) : '-'}
+                </td>
+                <td>${statusBadge}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+      }
+    }
+
+    function triggerUploadEquipmentImage(idEquip) {
+      currentModalEquipId = idEquip;
+      currentModalMcNo = '';
+      currentItemUploadType = '';
+      document.getElementById('imageFileInput').click();
+    }
+
+    async function openItemModal(partCode) {
+      if (!partCode || partCode === '-') return;
+
+      currentModalPartCode = partCode;
+      const modal = document.getElementById('itemDetailModal');
+      document.getElementById('itemModalTitle').textContent = 'Chi tiết mã hàng ' + partCode;
+      document.getElementById('modalKpiFirstDate').textContent = 'Đang tải…';
+      document.getElementById('modalKpiTotalShots').textContent = 'Đang tải…';
+      document.getElementById('modalKpiTotalInput').textContent = 'Đang tải…';
+      document.getElementById('itemMoldImgContainer').innerHTML = '<p class="empty">Đang tải ảnh khuôn…</p>';
+      document.getElementById('itemProductImgContainer').innerHTML = '<p class="empty">Đang tải ảnh sản phẩm…</p>';
+      document.getElementById('itemSpecsContainer').innerHTML = '<p class="empty">Đang tải thông số mã hàng…</p>';
+      document.getElementById('itemDefectModalTable').innerHTML = '<p class="empty">Đang tải lịch sử defect…</p>';
+      
+      modal.classList.remove('hidden');
+
+      try {
+        const res = await apiGet('getItemDetail', { partCode: partCode });
+        renderItemModalDetail(res);
+      } catch (e) {
+        alert('Không thể tải chi tiết mã hàng: ' + e.message);
+      }
+    }
+
+    function closeItemModal() {
+      document.getElementById('itemDetailModal').classList.add('hidden');
+    }
+
+    function renderItemModalDetail(res) {
+      currentModalPartCode = res.partCode;
+      document.getElementById('modalKpiFirstDate').textContent = res.startYearDisplay || 'Chưa ghi nhận';
+      document.getElementById('modalKpiTotalShots').textContent = fmt.format(res.totalShots || 0);
+      document.getElementById('modalKpiTotalInput').innerHTML = `${fmt.format(res.totalInput || 0)}<small> pcs</small>`;
+
+      const moldBox = document.getElementById('itemMoldImgContainer');
+      if (res.moldImgUrl) {
+        moldBox.innerHTML = `
+          <img src="${res.moldImgUrl}" onclick="openImageModal('${res.moldImgUrl}')" title="Xem ảnh khuôn to" />
+          <button style="position:absolute; bottom:6px; right:6px; font-size:10px; padding:4px 8px; background:rgba(0,0,0,0.7); color:#fff; border:0; border-radius:4px; cursor:pointer;" onclick="triggerUploadItemImage('mold')">📷 Đổi ảnh</button>`;
+      } else {
+        moldBox.innerHTML = `
+          <div class="no-thumb" style="width:100%; height:100%; font-size:11px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;" onclick="triggerUploadItemImage('mold')">
+            <span style="font-size:22px;">📷</span>
+            <b style="color:var(--blue);">Thêm ảnh Khuôn</b>
+          </div>`;
+      }
+
+      const prodBox = document.getElementById('itemProductImgContainer');
+      if (res.productImgUrl) {
+        prodBox.innerHTML = `
+          <img src="${res.productImgUrl}" onclick="openImageModal('${res.productImgUrl}')" title="Xem ảnh sản phẩm to" />
+          <button style="position:absolute; bottom:6px; right:6px; font-size:10px; padding:4px 8px; background:rgba(0,0,0,0.7); color:#fff; border:0; border-radius:4px; cursor:pointer;" onclick="triggerUploadItemImage('product')">📷 Đổi ảnh</button>`;
+      } else {
+        prodBox.innerHTML = `
+          <div class="no-thumb" style="width:100%; height:100%; font-size:11px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;" onclick="triggerUploadItemImage('product')">
+            <span style="font-size:22px;">📷</span>
+            <b style="color:var(--blue);">Thêm ảnh Sản phẩm</b>
+          </div>`;
+      }
+
+      const m = res.master || {};
+      document.getElementById('itemSpecsContainer').innerHTML = `
+        <div><label>IVN PART CODE</label><span>${safe(m.ivnPartCode || res.partCode)}</span></div>
+        <div><label>CUSTOMER PART CODE</label><span>${safe(m.custPartCode)}</span></div>
+        <div><label>PART NAME</label><span>${safe(m.partName)}</span></div>
+        <div><label>SAP CODE</label><span>${safe(m.sapCode)}</span></div>
+        <div><label>MÃ KHUÔN (MOLD NO)</label><span>${safe(m.moldNo)}</span></div>
+        <div><label>CYCLE TIME CHUẨN</label><span>${safe(m.cycleTime)} s</span></div>
+        <div><label>KHÁCH HÀNG</label><span>${safe(m.customer)}</span></div>
+        <div><label>SỐ CAVITY</label><span>${safe(m.cavity)}</span></div>
+        <div><label>TÊN NHỰA / MÀU</label><span>${safe(m.matName1)} ${m.matColor1 ? '(' + m.matColor1 + ')' : ''}</span></div>
+        <div><label>TRỌNG LƯỢNG 1 SHOT</label><span>${safe(m.shotWeight)} g</span></div>
+      `;
+
+      const defects = res.defectHistory || [];
+      const defectContainer = document.getElementById('itemDefectModalTable');
+
+      if (!defects.length) {
+        defectContainer.innerHTML = '<p class="empty">Mã hàng này chưa từng phát sinh sự cố/defect nào.</p>';
+      } else {
+        defectContainer.innerHTML = `<table>
+          <thead>
+            <tr>
+              <th>HÌNH ẢNH</th>
+              <th>ID</th>
+              <th>NGÀY</th>
+              <th>MÁY</th>
+              <th>TÊN LỖI (DEFECT)</th>
+              <th>TÌNH TRẠNG</th>
+              <th>KẾT QUẢ</th>
+              <th>PIC</th>
+              <th>THỜI GIAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${defects.map(d => `<tr>
+              <td>${renderImageThumb(d.imageUrl)}</td>
+              <td><b>${safe(d.id)}</b></td>
+              <td>${safe(d.dateText)}</td>
+              <td><span class="mc-link" onclick="openMachineModal('MC${safe(d.machine)}')">MC${safe(d.machine)}</span></td>
+              <td><span style="color:var(--red); font-weight:bold;">${safe(d.defect)}</span></td>
+              <td>${safe(d.status)}</td>
+              <td>${getBadgeHtml(d.result)}</td>
+              <td>${safe(d.pic)}</td>
+              <td>${safe(d.time)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+    }
+
+    function triggerUploadItemImage(type) {
+      currentItemUploadType = type; 
+      currentModalMcNo = '';
+      currentModalEquipId = '';
+      document.getElementById('imageFileInput').click();
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Data = e.target.result.split(',')[1];
+        const contentType = file.type;
+
+        if (currentItemUploadType && currentModalPartCode) {
+          const targetBox = (currentItemUploadType === 'mold') ? 'itemMoldImgContainer' : 'itemProductImgContainer';
+          document.getElementById(targetBox).innerHTML = '<p class="empty">Đang lưu ảnh…</p>';
+
+          try {
+            const res = await apiPost('uploadAndSaveItemImage', {
+              partCode: currentModalPartCode,
+              imgType: currentItemUploadType,
+              base64Data: base64Data,
+              contentType: contentType
+            });
+            currentItemUploadType = '';
+            if (res.success) {
+              alert('Đã cập nhật link ảnh thành công vào Sheet Items!');
+              openItemModal(currentModalPartCode);
+            } else {
+              alert('Lỗi: ' + res.error);
+            }
+          } catch (e) { alert('Lỗi kết nối: ' + e.message); }
+
+        } else if (currentModalEquipId) {
+          document.getElementById('mcImageContainer').innerHTML = '<p class="empty">Đang lưu ảnh…</p>';
+          try {
+            const res = await apiPost('uploadAndSaveEquipmentImage', {
+              idEquip: currentModalEquipId,
+              base64Data: base64Data,
+              contentType: contentType
+            });
+            if (res.success) {
+              alert('Đã cập nhật link ảnh thành công vào Sheet_Equipment!');
+              openEquipmentModal(currentModalEquipId);
+            } else {
+              alert('Lỗi: ' + res.error);
+            }
+          } catch (e) { alert('Lỗi kết nối: ' + e.message); }
+
+        } else if (currentModalMcNo) {
+          document.getElementById('mcImageContainer').innerHTML = '<p class="empty">Đang lưu ảnh…</p>';
+          try {
+            const res = await apiPost('uploadAndSaveMachineImage', {
+              mcNo: currentModalMcNo,
+              base64Data: base64Data,
+              contentType: contentType
+            });
+            if (res.success) {
+              alert('Đã cập nhật link ảnh thành công vào Sheet Machines!');
+              openMachineModal(currentModalMcNo);
+            } else {
+              alert('Lỗi: ' + res.error);
+            }
+          } catch (e) { alert('Lỗi kết nối: ' + e.message); }
+        }
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    async function loadTimelineData() {
+      const selectEl = document.getElementById('timelineItemCode');
+
+      if (itemsMasterList && itemsMasterList.length > 0 && selectEl.options.length <= 1) {
+        selectEl.innerHTML = itemsMasterList.map(item => 
+          `<option value="${safe(item.ivnPartCode)}">${safe(item.ivnPartCode)} - ${safe(item.partName)}</option>`
+        ).join('');
+      } else if (selectEl.options.length <= 1) {
+        try {
+          const rows = await apiGet('getItemsMaster');
+          itemsMasterList = rows || [];
+          if (itemsMasterList.length > 0) {
+            selectEl.innerHTML = itemsMasterList.map(item => 
+              `<option value="${safe(item.ivnPartCode)}">${safe(item.ivnPartCode)} - ${safe(item.partName)}</option>`
+            ).join('');
+            loadTimelineData();
+          }
+        } catch (e) { console.error(e); }
+        return;
+      }
+
+      const code = selectEl.value;
+      if (!code) return;
+
+      const container = document.getElementById('timelineTableContainer');
+      container.innerHTML = '<p class="empty">Đang tải dữ liệu Timeline cho mã ' + code + '…</p>';
+
+      try {
+        const res = await apiGet('getTimelineData', { partCode: code });
+        renderTimelineTable(res);
+      } catch (e) {
+        container.innerHTML = `<p class="empty" style="color:var(--red);">${e.message || 'Lỗi tải Timeline.'}</p>`;
+      }
+    }
+
+    function renderTimelineTable(res) {
+      const container = document.getElementById('timelineTableContainer');
+      const dateList = res.dateList || [];
+      const planMap = res.planMap || {};
+      const actualMap = res.actualMap || {};
+      const proTimeMap = res.proTimeMap || {};
+      const stopTimeMap = res.stopTimeMap || {};
+      const defectMap = res.defectMap || {};
+      const matrix = res.matrix || [];
+
+      if (!dateList.length) {
+        container.innerHTML = '<p class="empty">Không có dữ liệu trong khoảng thời gian chọn.</p>';
+        return;
+      }
+
+      let html = `<table style="font-size:11px; text-align:center; border:1px solid var(--line);">
+        <thead>
+          <tr style="background:#f8fafc;">
+            <th style="min-width:160px; text-align:left; position:sticky; left:0; z-index:2; background:#fff;">${res.partCode}</th>
+            ${dateList.map(d => `<th style="min-width:85px; text-align:center;"><u>${d.dateDisplay}</u><br><small>${d.dayOfWeek}</small></th>`).join('')}
+          </tr>
+          <tr>
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#fff; color:var(--blue);">生産予定数 (PC) - KH</th>
+            ${dateList.map(d => `<td class="num" style="font-weight:bold;">${fmt.format(planMap[d.dateKey] || 0)}</td>`).join('')}
+          </tr>
+          <tr style="background:#eff6ff;">
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#eff6ff; color:var(--blue);">生産数 (INJ) - Thực tế</th>
+            ${dateList.map(d => `<td class="num" style="font-weight:bold; color:var(--blue);">${fmt.format(actualMap[d.dateKey] || 0)}</td>`).join('')}
+          </tr>
+          <tr style="background:#fdf4ff;">
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#fdf4ff;">Thời gian chạy (Pro Time)</th>
+            ${dateList.map(d => `<td class="num" style="color:#c026d3; font-weight:bold;">${proTimeMap[d.dateKey] ? proTimeMap[d.dateKey] + 'h' : '0h'}</td>`).join('')}
+          </tr>
+          <tr style="background:#fff1f2;">
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#fff1f2;">Thời gian dừng (Stop Time)</th>
+            ${dateList.map(d => `<td class="num" style="color:#e11d48; font-weight:bold;">${stopTimeMap[d.dateKey] ? stopTimeMap[d.dateKey] + 'h' : '0h'}</td>`).join('')}
+          </tr>
+          <tr style="background:#fef2f2; border-top:2px solid #fca5a5; border-bottom:2px solid #fca5a5;">
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#fef2f2; color:var(--red); font-weight:bold;">⚠️ Defect phát sinh</th>
+            ${dateList.map(d => {
+              var defects = defectMap[d.dateKey] || [];
+              if (defects.length > 0) {
+                return `<td style="color:var(--red); font-weight:bold; font-size:10px; white-space:normal; max-width:85px; padding:4px 2px;" title="${defects.join(', ')}">
+                  ${defects.map(df => `<span class="badge badge-ng" style="margin:1px 0; display:block; text-overflow:ellipsis; overflow:hidden;">${df}</span>`).join('')}
+                </td>`;
+              }
+              return `<td style="color:#94a3b8;">-</td>`;
+            }).join('')}
+          </tr>
+          <tr style="background:#f8fafc;">
+            <th style="text-align:left; position:sticky; left:0; z-index:2; background:#fff; font-weight:bold;">Timeline (Khung giờ)</th>
+            ${dateList.map(() => `<td></td>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${matrix.map(m => `<tr>
+            <td style="text-align:left; font-weight:bold; position:sticky; left:0; z-index:2; background:#fff;">${m.block}</td>
+            ${dateList.map(d => {
+              const st = m.days[d.dateKey] || 'NoPlan';
+              let label = st;
+              if (st === 'Run') label = 'Run';
+              else if (st === 'Error') label = 'Error';
+              else if (st === 'Wait') label = 'Wait';
+              else if (st === 'NoPlan') label = 'NoPlan';
+              return `<td class="tl-status-${st}">${label}</td>`;
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+
+      container.innerHTML = html;
+    }
+
+    async function loadIncidents() {
+      try {
+        const data = await apiGet('getMachinesMaster');
+        const mcSelect = document.getElementById('incMachine');
+        const machines = (data && data.machines) ? data.machines : [];
+        mcSelect.innerHTML = '<option value="">Chọn máy cần sửa chữa...</option>' + 
+          machines.map(m => `<option value="MC${m.mcNo}">MC${m.mcNo} - ${m.model}</option>`).join('');
+      } catch (e) { console.error(e); }
+
+      try {
+        const res = await apiGet('getIncidentFormData');
+        const reporterSelect = document.getElementById('incReporter');
+        const members = res.members || [];
+        if (members.length > 0) {
+          reporterSelect.innerHTML = '<option value="">Chọn người báo cáo...</option>' +
+            members.map(m => `<option value="${safe(m)}">${safe(m)}</option>`).join('');
+        } else {
+          reporterSelect.innerHTML = '<option value="">Không tìm thấy dữ liệu Sheet_Member</option>';
+        }
+        globalEquipments = res.equipments || [];
+      } catch (e) { console.error(e); }
+
+      try {
+        const res = await apiGet('getIncidentRequests');
+        renderIncidentLists(res);
+      } catch (e) { console.error(e); }
+    }
+
+    function onIncidentMachineChange(selectedMc) {
+      const equipSelect = document.getElementById('incEquip');
+      if (!selectedMc) {
+        equipSelect.innerHTML = '<option value="-">Toàn bộ máy / Không rõ</option>';
+        return;
+      }
+
+      var rawMcNum = String(selectedMc).split('-')[0].replace(/[^0-9]/g, '').trim();
+
+      var matchedEquips = globalEquipments.filter(function(eq) {
+        var pair = String(eq.pairWith || '').replace(/[^0-9]/g, '').trim();
+        return pair === rawMcNum && rawMcNum !== '';
+      });
+
+      if (!matchedEquips.length) {
+        equipSelect.innerHTML = '<option value="-">Toàn bộ máy (Không có thiết bị phụ trợ nào pair với MC' + rawMcNum + ')</option>';
+      } else {
+        equipSelect.innerHTML = '<option value="-">Toàn bộ máy / Không rõ</option>' +
+          matchedEquips.map(e => `<option value="${safe(e.idEquip)}">${safe(e.idEquip)} - ${safe(e.model)}</option>`).join('');
+      }
+    }
+
+    function renderIncidentLists(res) {
+      const pending = res.pending || [];
+      const completed = res.completed || [];
+
+      const alertBanner = document.getElementById('incAlertBanner');
+      if (pending.length > 0) {
+        document.getElementById('pendingCount').textContent = pending.length;
+        alertBanner.classList.remove('hidden');
+      } else {
+        alertBanner.classList.add('hidden');
+      }
+
+      const pendingContainer = document.getElementById('pendingRequestsContainer');
+      if (!pending.length) {
+        pendingContainer.innerHTML = '<p class="empty" style="color:var(--blue);">🎉 Hiện tại không có sự cố nào đang chờ xử lý.</p>';
+      } else {
+        pendingContainer.innerHTML = pending.map(item => `
+          <div style="background:#fff5f5; border:1px solid #fecaca; border-radius:10px; padding:16px; margin-bottom:14px; display:grid; gap:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <b style="font-size:14px; color:var(--ink);">${safe(item.id)}</b>
+                <span class="badge badge-ng" style="margin-left:8px;">${safe(item.status)}</span>
+              </div>
+              <small style="color:var(--muted);">Ngày báo: <b>${safe(item.date)}</b></small>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+              <div><b>Người báo:</b> <span style="color:var(--blue); font-weight:bold;">${safe(item.reporter)}</span></div>
+              <div><b>Máy / Linh kiện:</b> <span class="mc-link" onclick="openMachineModal('${safe(item.mcNo)}')">${safe(item.mcNo)}</span> (${safe(item.equip)})</div>
+            </div>
+
+            <div style="background:#fff; padding:10px; border-radius:6px; border:1px solid var(--line);">
+              <b style="color:var(--red);">Mô tả sự cố:</b><br>${safe(item.issue)}
+            </div>
+
+            <div style="display:grid; gap:8px; background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--line);">
+              <b>🔧 Cập nhật xử lý từ Kỹ thuật viên:</b>
+              <input type="text" id="cause_${item.rowIndex}" placeholder="Nhập nguyên nhân sự cố..." style="width:100%;">
+              <input type="text" id="action_${item.rowIndex}" placeholder="Nhập hành động xử lý cụ thể..." style="width:100%;">
+              <button onclick="submitResolveIncident(${item.rowIndex})" style="background:#16a34a; height:36px; margin-top:4px;">
+                ✔ Xử lý xong (Chuyển Hoàn Thành)
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const completedContainer = document.getElementById('completedRequestsContainer');
+      if (!completed.length) {
+        completedContainer.innerHTML = '<p class="empty">Chưa có lịch sử các yêu cầu đã xử lý.</p>';
+      } else {
+        completedContainer.innerHTML = `<table>
+          <thead>
+            <tr>
+              <th>MÃ ID</th>
+              <th>NGÀY BÁO</th>
+              <th>MÁY</th>
+              <th>NGƯỜI BÁO</th>
+              <th>MÔ TẢ SỰ CỐ</th>
+              <th>NGUYÊN NHÂN</th>
+              <th>HÀNH ĐỘNG XỬ LÝ</th>
+              <th>TRẠNG THÁI</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${completed.map(c => `<tr>
+              <td><b>${safe(c.id)}</b></td>
+              <td>${safe(c.date)}</td>
+              <td><span class="mc-link" onclick="openMachineModal('${safe(c.mcNo)}')">${safe(c.mcNo)}</span></td>
+              <td><b style="color:var(--ink);">${safe(c.reporter)}</b></td>
+              <td style="color:var(--red); font-weight:bold; max-width:250px; white-space:normal;">${safe(c.issue)}</td>
+              <td style="max-width:200px; white-space:normal;">${safe(c.cause)}</td>
+              <td style="max-width:200px; white-space:normal;"><b>${safe(c.action)}</b></td>
+              <td><span class="badge badge-ok">${safe(c.status)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+    }
+
+    function handleIncidentSubmit(e) {
+      e.preventDefault();
+      
+      var reporterVal = document.getElementById('incReporter').value;
+      var machineVal = document.getElementById('incMachine').value;
+      var issueVal = document.getElementById('incIssue').value;
+
+      if (!reporterVal || !machineVal || !issueVal) {
+        alert('Vui lòng điền đầy đủ: Tên người báo, Máy gặp sự cố và Mô tả sự cố!');
+        return;
+      }
+
+      const fileInput = document.getElementById('incImageFile');
+      const file = fileInput ? fileInput.files[0] : null;
+
+      const payload = {
+        reporter: reporterVal,
+        mcNo: machineVal,
+        equip: document.getElementById('incEquip').value || '-',
+        issue: issueVal
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          payload.base64Image = evt.target.result.split(',')[1];
+          payload.imageType = file.type;
+          sendPayload(payload);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        sendPayload(payload);
+      }
+    }
+
+    async function sendPayload(payload) {
+      var submitBtn = document.querySelector('#incidentForm button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Đang ghi dữ liệu vào Sheet...';
+      }
+
+      try {
+        const res = await apiPost('submitRepairRequest', { data: payload });
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Gửi yêu cầu sửa chữa';
+        }
+
+        if (res && res.success) {
+          alert('🎉 ĐÃ THÊM THÀNH CÔNG!\nMã Yêu Cầu: ' + res.reqId);
+          document.getElementById('incidentForm').reset();
+          loadIncidents();
+        } else {
+          alert('❌ LỖI TỪ SERVER: ' + (res ? res.error : 'Không có phản hồi'));
+        }
+      } catch (err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Gửi yêu cầu sửa chữa';
+        }
+        alert('❌ LỖI KẾT NỐI API: ' + err.message);
+      }
+    }
+
+    async function loadMonthlyKpiReport() {
+      const selectedMonth = document.getElementById('kpiMonthPicker').value;
+
+      try {
+        const res = await apiGet('getMonthlyKpiReport', { selectedMonthStr: selectedMonth });
+        renderKpiReport(res);
+      } catch (err) {
+        alert('Lỗi tải KPI: ' + err.message);
+      }
+    }
+
+    function renderKpiReport(res) {
+      if (!res) return;
+
+      document.getElementById('repPlanRate').textContent = (res.planAchieveRate || 0) + '%';
+      document.getElementById('repPlanDetail').textContent = 
+        `Thực tế: ${fmt.format(res.totalActualOutput || 0)} / KH: ${fmt.format(res.totalPlanOutput || 0)} pcs`;
+
+      const mcList = res.top3ErrorMachines || [];
+      const mcContainer = document.getElementById('repTop3McErrorsList');
+      if (!mcList.length) {
+        mcContainer.innerHTML = '<p class="empty">Không có máy hỏng</p>';
+      } else {
+        mcContainer.innerHTML = mcList.map((m, idx) => `
+          <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #fca5a5;">
+            <b>${idx + 1}. <span class="mc-link" onclick="openMachineModal('${m.mcNo}')">${m.mcNo}</span></b>: ${m.count} lần lỗi (${m.stopTime}h)
+            <div id="pie_mc_${idx}" style="width:100%; height:130px;"></div>
+          </div>
+        `).join('');
+
+        mcList.forEach((m, idx) => {
+          if (m.pieData && m.pieData.length > 1) {
+            var d = google.visualization.arrayToDataTable(m.pieData);
+            new google.visualization.PieChart(document.getElementById('pie_mc_' + idx)).draw(d, {
+              chartArea: { left: 5, top: 5, width: '90%', height: '90%' },
+              legend: { position: 'right', textStyle: { fontSize: 10 } }
+            });
+          }
+        });
+      }
+
+      const lowItems = res.top3LowRunItems || [];
+      document.getElementById('repTop3LowRunItems').innerHTML = lowItems.length ? lowItems.map(i => 
+        `<li><b class="item-link" onclick="openItemModal('${i.itemCode}')">${i.itemCode}</b>: Running Rate <b>${i.rate}%</b> (Chạy ${i.proTime}h / Dừng ${i.stopTime}h)</li>`
+      ).join('') : '<li>Chưa có dữ liệu</li>';
+
+      const adjItems = res.top3AdjustItems || [];
+      const adjContainer = document.getElementById('repTop3AdjustItemsList');
+      if (!adjItems.length) {
+        adjContainer.innerHTML = '<p class="empty">Không có dữ liệu điều chỉnh</p>';
+      } else {
+        adjContainer.innerHTML = adjItems.map((i, idx) => `
+          <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #86efac;">
+            <b>${idx + 1}. <span class="item-link" onclick="openItemModal('${i.itemCode}')">${i.itemCode}</b>: ${i.count} lần chỉnh (~${i.time}h)
+            <div id="pie_item_${idx}" style="width:100%; height:130px;"></div>
+          </div>
+        `).join('');
+
+        adjItems.forEach((i, idx) => {
+          if (i.pieData && i.pieData.length > 1) {
+            var d = google.visualization.arrayToDataTable(i.pieData);
+            new google.visualization.PieChart(document.getElementById('pie_item_' + idx)).draw(d, {
+              chartArea: { left: 5, top: 5, width: '90%', height: '90%' },
+              legend: { position: 'right', textStyle: { fontSize: 10 } }
+            });
+          }
+        });
+      }
+
+      const monthDefects = res.monthDefectPieData || [];
+      if (monthDefects.length > 1) {
+        var dDefect = google.visualization.arrayToDataTable(monthDefects);
+        new google.visualization.PieChart(document.getElementById('repMonthDefectPieChart')).draw(dDefect, {
+          chartArea: { left: 20, top: 20, width: '90%', height: '80%' },
+          legend: { position: 'right', textStyle: { fontSize: 11 } }
+        });
+      } else {
+        document.getElementById('repMonthDefectPieChart').innerHTML = '<p class="empty">Không có lỗi defect trong tháng.</p>';
+      }
+
+      const dailyData = res.dailyChartData || [];
+      if (dailyData.length > 0) {
+        const chartArr = [['Ngày', 'Running Rate (%)'], ...dailyData.map(d => [d.date, d.rate])];
+        const dTable = google.visualization.arrayToDataTable(chartArr);
+
+        new google.visualization.ColumnChart(document.getElementById('repMonthlyTrendChart')).draw(dTable, {
+          legend: 'none',
+          colors: ['#16a34a'],
+          chartArea: { left: 45, top: 20, width: '85%', height: '70%' },
+          hAxis: { title: 'Ngày trong tháng', textStyle: { fontSize: 10 } },
+          vAxis: { minValue: 0, maxValue: 100, title: '%' }
+        });
+      } else {
+        document.getElementById('repMonthlyTrendChart').innerHTML = '<p class="empty">Chưa có dữ liệu tháng.</p>';
+      }
+    }
+
+    async function submitResolveIncident(rowIndex) {
+      const cause = document.getElementById('cause_' + rowIndex).value.trim();
+      const action = document.getElementById('action_' + rowIndex).value.trim();
+
+      if (!cause || !action) {
+        alert('Vui lòng nhập đầy đủ Nguyên nhân và Hành động xử lý.');
+        return;
+      }
+
+      try {
+        const res = await apiPost('updateRepairAction', {
+          rowIndex: rowIndex,
+          cause: cause,
+          action: action,
+          status: 'Hoàn thành'
+        });
+        if (res.success) {
+          alert('Đã cập nhật hoàn thành xử lý sự cố!');
+          loadIncidents();
+        } else {
+          alert('Lỗi: ' + res.error);
+        }
+      } catch (err) { alert('Lỗi kết nối: ' + err.message); }
+    }
+
+    function drawActivity(rows) {
+      const el = document.getElementById('machineActivity');
+      if (!rows.length) return empty(el, 'Chưa có defect ticket trong ngày này.');
+      el.innerHTML = rows.map(t => 
+        `<div class="machine">
+          <div>${renderImageThumb(t.imageUrl)}</div>
+          <b><span class="mc-link" onclick="openMachineModal('MC${safe(t.machine)}')">MC${safe(t.machine)}</span></b>
+          <small>${safe(t.defect)}<br><span class="item-link" onclick="openItemModal('${safe(t.partCode)}')">${safe(t.partCode)}</span> · ${safe(t.status)}</small>
+          <div class="stats">${getBadgeHtml(t.result)}<b>${safe(t.pic)} ${safe(t.time)}</b></div>
+        </div>`
+      ).join('');
+    }
+
+    function drawWeeklyDefects(rows) {
+      const el = document.getElementById('weeklyDefectTable');
+      if (!rows || !rows.length) return empty(el, 'Không có defect ticket trong 7 ngày gần nhất.');
+      
+      el.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>HÌNH ẢNH</th>
+            <th>ID</th>
+            <th>DATE</th>
+            <th>MC</th>
+            <th>PART CODE</th>
+            <th>DEFECT</th>
+            <th>STATUS</th>
+            <th>RESULT</th>
+            <th>PIC</th>
+            <th>TIME</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(t => `<tr>
+            <td>${renderImageThumb(t.imageUrl)}</td>
+            <td><b>${safe(t.id)}</b></td>
+            <td>${safe(t.dateText || formatDateKey(t.dateKey))}</td>
+            <td><span class="mc-link" onclick="openMachineModal('MC${safe(t.machine)}')">MC${safe(t.machine)}</span></td>
+            <td><span class="item-link" onclick="openItemModal('${safe(t.partCode)}')">${safe(t.partCode)}</span></td>
+            <td>${safe(t.defect)}</td>
+            <td>${safe(t.status)}</td>
+            <td>${getBadgeHtml(t.result)}</td>
+            <td>${safe(t.pic)}</td>
+            <td>${safe(t.time)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    async function loadMachines() {
+      const container = document.getElementById('machinesTableContainer');
+      container.innerHTML = '<p class="empty">Đang tải danh mục máy & thiết bị phụ trợ…</p>';
+      
+      try {
+        const data = await apiGet('getMachinesMaster');
+        drawMachinesTable(data);
+      } catch (e) {
+        container.innerHTML = `<p class="empty" style="color:var(--red);">${e.message || 'Không thể tải danh sách máy.'}</p>`;
+      }
+    }
+
+    function drawMachinesTable(data) {
+      const container = document.getElementById('machinesTableContainer');
+      const machines = (data && data.machines) ? data.machines : (Array.isArray(data) ? data : []);
+      const equipments = (data && data.equipments) ? data.equipments : [];
+
+      let html = '';
+
+      if (!machines.length) {
+        html += '<p class="empty">Không có dữ liệu trong sheet Machines.</p>';
+      } else {
+        html += `<h2 style="font-size:14px; margin:0 0 10px; color:var(--blue);">1. Danh mục Máy ép nhựa (Injection Machines)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>S/N</th>
+              <th>MC No.</th>
+              <th>Manufacturer</th>
+              <th>Machine Model</th>
+              <th>Serial Number</th>
+              <th>Manufac. Year</th>
+              <th>Received date</th>
+              <th class="num">Clamp Force (Tf)</th>
+              <th class="num">Screw Dia. (mm)</th>
+              <th class="num">Inj. Capacity (cm3)</th>
+              <th class="num">Inj. Pressure (Mpa)</th>
+              <th class="num">Clamping Stroke (mm)</th>
+              <th class="num">Ejector Stroke (mm)</th>
+              <th>Machine size (LxWxH)</th>
+              <th class="num">Mc Weight (T)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${machines.map(r => `<tr>
+              <td>${safe(r.sn)}</td>
+              <td><span class="mc-link" onclick="openMachineModal('MC${safe(r.mcNo)}')">MC${safe(r.mcNo)}</span></td>
+              <td>${safe(r.manufacturer)}</td>
+              <td>${safe(r.model)}</td>
+              <td>${safe(r.serial)}</td>
+              <td>${safe(r.year)}</td>
+              <td>${safe(r.receivedDate)}</td>
+              <td class="num">${safe(r.clampForce)}</td>
+              <td class="num">${safe(r.screwDia)}</td>
+              <td class="num">${safe(r.injCap)}</td>
+              <td class="num">${safe(r.injPress)}</td>
+              <td class="num">${safe(r.clampingStroke)}</td>
+              <td class="num">${safe(r.ejectorStroke)}</td>
+              <td>${safe(r.machineSize)}</td>
+              <td class="num">${safe(r.mcWeight)}</td>
+              <td><span class="badge badge-ok">${safe(r.status || 'Using')}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+
+      html += `<h2 style="font-size:14px; margin:24px 0 10px; color:var(--blue);">2. Danh mục Thiết bị phụ trợ (Sheet_Equipment)</h2>`;
+
+      if (!equipments.length) {
+        html += '<p class="empty">Không thể kết nối hoặc chưa có dữ liệu trong Sheet_Equipment file bảo trì.</p>';
+      } else {
+        html += `<table>
+          <thead>
+            <tr>
+              <th>ID EQUIP</th>
+              <th>MANUFACTURER</th>
+              <th>MODEL</th>
+              <th>SERIAL NUMBER</th>
+              <th>PAIR WITH FIXED ASSET</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${equipments.map(e => {
+              var eqCode = String(e.idEquip || e.id || e.ID || '').trim();
+              return `<tr>
+                <td><span class="mc-link" style="cursor:pointer; font-weight:bold; color:var(--blue); text-decoration:underline;" onclick="openEquipmentModal('${safe(eqCode)}')">${safe(eqCode)}</span></td>
+                <td><b>${safe(e.manufacturer)}</b></td>
+                <td>${safe(e.model)}</td>
+                <td>${safe(e.serial)}</td>
+                <td>${safe(e.pairAsset)}</td>
+                <td><span class="badge badge-ok">${safe(e.status || 'Normal')}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function drawMachine(rows) {
+      const el = document.getElementById('machineChart');
+      if (!rows || !rows.length) return empty(el);
+      const d = google.visualization.arrayToDataTable([
+        ['Machine', 'Shots'],
+        ...rows.map(r => ['MC' + r.machine, r.shots || 0])
+      ]);
+      new google.visualization.ColumnChart(el).draw(d, {
+        legend: 'none',
+        colors: ['#20b978'],
+        chartArea: { left: 52, top: 15, width: '84%', height: '72%' },
+        hAxis: { textStyle: { color: '#63738d' } },
+        vAxis: { minValue: 0, title: 'Shots', gridlines: { color: '#e5eaf2' }, textStyle: { color: '#63738d' } }
+      });
+    }
+
+    function drawIncomingPlans(plans) {
+      const el = document.getElementById('incomingPlanTable');
+      if (!plans || !plans.length) return empty(el, 'Không có kế hoạch sản xuất nào trong 7 ngày tới.');
+
+      el.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>NGÀY SẢN XUẤT</th>
+            <th>MÁY (MC)</th>
+            <th>MÃ HÀNG (ITEM NAME)</th>
+            <th class="num">SẢN LƯỢNG KẾ HOẠCH</th>
+            <th>MÃ KHUÔN (MOLD NO)</th>
+            <th>LOẠI NHỰA / MÀU</th>
+            <th>GHI CHÚ (NOTE)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${plans.map(p => `<tr>
+            <td><b>${safe(p.dateText)}</b></td>
+            <td><span class="mc-link" onclick="openMachineModal('MC${safe(p.machine)}')">MC${safe(p.machine)}</span></td>
+            <td><span class="item-link" onclick="openItemModal('${safe(p.itemName)}')">${safe(p.itemName)}</span></td>
+            <td class="num"><b>${fmt.format(p.quantity)}</b></td>
+            <td>${safe(p.moldNo)}</td>
+            <td>${safe(p.material)}</td>
+            <td>${safe(p.note)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    function drawCycleCompareChart(parts) {
+      const el = document.getElementById('cycleCompareChart');
+      if (!parts || !parts.length) return empty(el, 'Không có dữ liệu chu kỳ ép cho ngày này.');
+
+      const validRows = parts.filter(p => p.proCycle > 0 || p.stdCycle > 0)
+        .sort((a, b) => String(a.machine).localeCompare(String(b.machine), undefined, { numeric: true }));
+
+      if (!validRows.length) return empty(el, 'Không có máy nào phát sinh sản lượng.');
+
+      const chartData = [
+        ['Machine', 'Pro Cycle (s)', 'Std Cycle (s)'],
+        ...validRows.map(r => ['MC' + r.machine, r.proCycle, r.stdCycle])
+      ];
+
+      const d = google.visualization.arrayToDataTable(chartData);
+      new google.visualization.ColumnChart(el).draw(d, {
+        legend: { position: 'top', textStyle: { fontSize: 11, color: '#526b92' } },
+        colors: ['#dc2626', '#2563eb'],
+        chartArea: { left: 52, top: 40, width: '85%', height: '68%' },
+        hAxis: { textStyle: { color: '#63738d', fontSize: 10 } },
+        vAxis: { minValue: 0, title: 'Giây (s)', gridlines: { color: '#e5eaf2' }, textStyle: { color: '#63738d' } }
+      });
+    }
+
+    async function loadItems() {
+      const container = document.getElementById('itemsTableContainer');
+      container.innerHTML = '<p class="empty">Đang tải danh mục mã hàng…</p>';
+      
+      try {
+        const rows = await apiGet('getItemsMaster');
+        itemsMasterList = rows || [];
+        drawItemsTable(itemsMasterList);
+      } catch (e) {
+        container.innerHTML = `<p class="empty" style="color:var(--red);">${e.message || 'Không thể tải sheet Items.'}</p>`;
+      }
+    }
+
+    function onItemSearchInput(val) {
+      const dropdown = document.getElementById('searchDropdown');
+      const query = val.trim().toLowerCase();
+      if (!query) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      
+      const matches = itemsMasterList.filter(item => 
+        (item.ivnPartCode && item.ivnPartCode.toLowerCase().includes(query)) ||
+        (item.partName && item.partName.toLowerCase().includes(query)) ||
+        (item.custPartCode && item.custPartCode.toLowerCase().includes(query))
+      ).slice(0, 10);
+
+      if (!matches.length) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      dropdown.innerHTML = matches.map(m => 
+        `<div onclick="selectSearchItem('${safe(m.ivnPartCode)}')">
+          <b>${safe(m.ivnPartCode)}</b> - ${safe(m.partName)}
+        </div>`
+      ).join('');
+      dropdown.style.display = 'block';
+    }
+
+    function selectSearchItem(code) {
+      document.getElementById('itemSearchInput').value = code;
+      document.getElementById('searchDropdown').style.display = 'none';
+      executeItemSearch();
+    }
+
+    async function executeItemSearch() {
+      const code = document.getElementById('itemSearchInput').value.trim();
+      if (!code) {
+        alert('Vui lòng nhập mã hàng.');
+        return;
+      }
+      document.getElementById('searchDropdown').style.display = 'none';
+      document.getElementById('itemDetailSection').classList.remove('hidden');
+      document.getElementById('kpiFirstDate').textContent = 'Đang tải…';
+      document.getElementById('kpiTotalShots').textContent = 'Đang tải…';
+      document.getElementById('kpiTotalInput').textContent = 'Đang tải…';
+
+      try {
+        const res = await apiGet('getItemDetail', { partCode: code });
+        renderItemDetail(res);
+      } catch (e) {
+        alert(e.message || 'Lỗi tra cứu mã hàng.');
+      }
+    }
+
+    function renderItemDetail(res) {
+      document.getElementById('kpiFirstDate').textContent = res.startYearDisplay || 'Chưa ghi nhận';
+      document.getElementById('kpiTotalShots').textContent = fmt.format(res.totalShots || 0);
+      document.getElementById('kpiTotalInput').innerHTML = `${fmt.format(res.totalInput || 0)}<small> pcs</small>`;
+      document.getElementById('monthlyChartTitle').textContent = `Sản lượng sản xuất từng tháng trong năm ${res.currentYear} (${res.partCode})`;
+
+      drawMonthlyChart(res.monthlyProduction || []);
+      drawYearlyChart(res.yearlyList || []);
+      drawItemDefectTable(res.defectHistory || []);
+    }
+
+    function drawMonthlyChart(monthlyData) {
+      const el = document.getElementById('itemMonthlyChart');
+      const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+      
+      const chartData = [
+        ['Tháng', 'Input Qty'],
+        ...months.map((m, idx) => [m, monthlyData[idx] || 0])
+      ];
+
+      const d = google.visualization.arrayToDataTable(chartData);
+      new google.visualization.ColumnChart(el).draw(d, {
+        legend: 'none',
+        colors: ['#2864ee'],
+        chartArea: { left: 55, top: 20, width: '85%', height: '70%' },
+        hAxis: { title: 'Tháng', textStyle: { color: '#63738d' } },
+        vAxis: { minValue: 0, gridlines: { color: '#e5eaf2' }, textStyle: { color: '#63738d' } }
+      });
+    }
+
+    function drawYearlyChart(yearlyData) {
+      const el = document.getElementById('itemYearlyChart');
+      if (!yearlyData || !yearlyData.length) {
+        el.innerHTML = '<p class="empty">Chưa có dữ liệu sản xuất theo năm.</p>';
+        return;
+      }
+
+      const chartData = [
+        ['Năm', 'Tổng Shot', 'Sản lượng Input'],
+        ...yearlyData.map(item => ['Năm ' + item.year, item.shots || 0, item.input || 0])
+      ];
+
+      const d = google.visualization.arrayToDataTable(chartData);
+      new google.visualization.ColumnChart(el).draw(d, {
+        legend: { position: 'top', textStyle: { fontSize: 11, color: '#526b92' } },
+        colors: ['#20b978', '#2864ee'],
+        chartArea: { left: 60, top: 40, width: '84%', height: '68%' },
+        hAxis: { textStyle: { color: '#63738d' } },
+        vAxis: { minValue: 0, gridlines: { color: '#e5eaf2' }, textStyle: { color: '#63738d' } }
+      });
+    }
+
+    function drawItemsTable(rows) {
+      const container = document.getElementById('itemsTableContainer');
+      if (!rows || !rows.length) {
+        container.innerHTML = '<p class="empty">Không có dữ liệu trong sheet Items.</p>';
+        return;
+      }
+      container.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>IVN PART CODE</th>
+            <th>CUSTOMER PART CODE</th>
+            <th>SAP CODE</th>
+            <th>PART NAME</th>
+            <th>MOLD NO</th>
+            <th>CYCLE TIME (S)</th>
+            <th>CUSTOMER</th>
+            <th>CAV</th>
+            <th>MATERIAL CODE</th>
+            <th>MATERIAL NAME</th>
+            <th>COLOR</th>
+            <th class="num">1 SHOT (g)</th>
+            <th class="num">SINGLE (g)</th>
+            <th class="num">RUNNER (g)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `<tr>
+            <td><span class="item-link" onclick="openItemModal('${safe(r.ivnPartCode)}')">${safe(r.ivnPartCode)}</span></td>
+            <td>${safe(r.custPartCode)}</td>
+            <td>${safe(r.sapCode)}</td>
+            <td>${safe(r.partName)}</td>
+            <td>${safe(r.moldNo)}</td>
+            <td class="num">${safe(r.cycleTime)}</td>
+            <td>${safe(r.customer)}</td>
+            <td class="num">${safe(r.cavity)}</td>
+            <td>${safe(r.matCode1)}</td>
+            <td>${safe(r.matName1)}</td>
+            <td>${safe(r.matColor1)}</td>
+            <td class="num">${safe(r.shotWeight)}</td>
+            <td class="num">${safe(r.singleWeight)}</td>
+            <td class="num">${safe(r.runnerWeight)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    function formatDateKey(key) {
+      if (!/^\d{8}$/.test(key)) return key;
+      return `${key.slice(6,8)}/${key.slice(4,6)}/${key.slice(0,4)}`;
+    }
+
+    function set(id, value, suffix = '') {
+      document.getElementById(id).innerHTML = String(value) + (suffix ? `<small>${suffix}</small>` : '');
+    }
+
+    function drawTable(rows) {
+      const el = document.getElementById('table');
+      if (!rows || !rows.length) return empty(el);
+
+      el.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>MC NO</th>
+            <th>PART CODE</th>
+            <th class="num">INPUT</th>
+            <th class="num">CAV</th>
+            <th class="num">CALC SHOTS</th>
+            <th class="num" title="Thời gian máy thực chạy">PRO TIME (H)</th>
+            <th class="num" title="Thời gian máy dừng">STOP TIME (H)</th>
+            <th class="num" title="Cycle time khi máy thực chạy">PRO CYCLE (S)</th>
+            <th class="num" title="Cycle time tiêu chuẩn">STD CYCLE (S)</th>
+            <th>ĐÁNH GIÁ CHU KỲ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            let warningBadge = '<span class="badge badge-ok">CHUẨN</span>';
+            if (r.warningStatus === 'CRITICAL') {
+              warningBadge = `<span class="badge badge-ng" title="Lệch +${r.diffPercent}% so với CT chuẩn">CHẬM (+${r.diffPercent}%)</span>`;
+            } else if (r.warningStatus === 'WARNING') {
+              warningBadge = `<span class="badge badge-cndb" title="Lệch +${r.diffPercent}% so với CT chuẩn">HƠI CHẬM (+${r.diffPercent}%)</span>`;
+            }
+
+            return `<tr>
+              <td><span class="mc-link" onclick="openMachineModal('MC${safe(r.machine)}')">MC${safe(r.machine)}</span></td>
+              <td><span class="item-link" onclick="openItemModal('${safe(r.partCode)}')">${safe(r.partCode)}</span></td>
+              <td class="num">${fmt.format(r.input)}</td>
+              <td class="num">${safe(r.actualCav)}</td>
+              <td class="num"><b>${fmt.format(r.calculatedShots)}</b></td>
+              <td class="num">${safe(r.proTime)}h</td>
+              <td class="num">${safe(r.stopTime)}h</td>
+              <td class="num"><b>${safe(r.proCycle)}s</b></td>
+              <td class="num">${safe(r.stdCycle)}s</td>
+              <td>${warningBadge}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    function getBadgeHtml(res) {
+      if (!res) return '-';
+      const upper = String(res).toUpperCase();
+      if (upper === 'OK') return `<span class="badge badge-ok">OK</span>`;
+      if (upper === 'NG') return `<span class="badge badge-ng">NG</span>`;
+      if (upper === 'CNDB') return `<span class="badge badge-cndb">CNDB</span>`;
+      return safe(res);
+    }
+
+    function empty(el, msg = 'Không có dữ liệu cho ngày này.') {
+      el.innerHTML = `<p class="empty">${msg}</p>`;
+    }
+
+    function safe(v) {
+      const d = document.createElement('div');
+      d.textContent = v || '-';
+      return d.innerHTML;
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentData) {
+        drawMachine(currentData.machines || []);
+        drawCycleCompareChart(currentData.parts || []);
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.search-wrap')) {
+        const dropdown = document.getElementById('searchDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
